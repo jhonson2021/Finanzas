@@ -3,7 +3,7 @@ import { Cuota } from './cuota';
 import { IndicadoresFinancieros } from './indicadoresFinancieros';
 
 export interface PlanPago {
-  id?: number; // Opcional, json-server lo genera automáticamente
+  id?: number; 
   usuarioId: number;
   localId: number;
   bancoId: number;

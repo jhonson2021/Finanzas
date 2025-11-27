@@ -296,12 +296,11 @@ export class SimuladorComponent implements OnInit {
     }
 
     if (this.guardandoPlan) {
-      return; // Evitar doble clic
+      return; 
     }
 
     this.guardandoPlan = true;
 
-    // Remover el id si existe (para que json-server genere uno nuevo)
     const planParaGuardar = { ...this.planGenerado };
     delete (planParaGuardar as any).id;
 
@@ -310,7 +309,6 @@ export class SimuladorComponent implements OnInit {
         this.guardandoPlan = false;
         console.log('Plan guardado exitosamente:', planGuardado);
         
-        // Actualizar el plan local con el ID generado
         this.planGenerado = planGuardado;
         
         const irAPlanes = confirm(

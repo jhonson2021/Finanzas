@@ -15,12 +15,11 @@ export class CalculadoraFinancieraService {
     return 12 / frecuenciaPago;
   }
 
-  // TEA (Tasa Efectiva Anual en decimal) a TEM (Tasa Efectiva Mensual en decimal)
+ 
   convertirTEAaMensual(tea: number): number {
     return Math.pow(1 + tea, 1 / 12) - 1;
   }
 
-  // TNA (Tasa Nominal Anual en decimal) a TEM (Tasa Efectiva Mensual en decimal)
   convertirNominalAMensual(tna: number, capitalizacion: string): number {
     const map: any = { 'MENSUAL': 12, 'BIMESTRAL': 6, 'TRIMESTRAL': 4, 'SEMESTRAL': 2, 'ANUAL': 1 };
     const mcap = map[capitalizacion] || 12;
@@ -36,7 +35,7 @@ export class CalculadoraFinancieraService {
     }
   }
 
-  // TEM (decimal) a Tasa por Periodo (decimal)
+
   calcularTasaPorPeriodoDesdeTEM(temMensual: number, frecuenciaPago: number): number {
     const m = this.mesesPorPeriodo(frecuenciaPago);
     return Math.pow(1 + temMensual, m) - 1;
@@ -84,24 +83,25 @@ export class CalculadoraFinancieraService {
     const periodoGracia = config.periodoGracia || 0;
     const tipoGracia = config.tipoGracia || 'NINGUNO';
 
-    // 1) CÁLCULO DE COSTOS INICIALES
     const ci = banco.costosIniciales || {};
-    const porcentajeComisionActivacion = ci.porcentajeComisionActivacion || 0; 
-    const porcentajeSeguroDesgravamen = ci.porcentajeSeguroDesgravamen || 0;
-    
+
+    const rawPorComisionActivacion = ci.porcentajeComisionActivacion ?? 0;
+    const porcentajeComisionActivacion = rawPorComisionActivacion > 1 ? rawPorComisionActivacion / 100 : rawPorComisionActivacion;
+
+    const rawPorcentajeSeguroDesgravamenInicial = ci.porcentajeSeguroDesgravamen ?? 0;
+    const porcentajeSeguroDesgravamenInicial = rawPorcentajeSeguroDesgravamenInicial > 1 ? rawPorcentajeSeguroDesgravamenInicial / 100 : rawPorcentajeSeguroDesgravamenInicial;
+
     const costosInicialesTotal =
       (ci.costesNotariales || 0) +
       (ci.seguroRiesgo || 0) +
       (ci.costesRegistrales || 0) +
       (ci.tasacion || 0) +
       (ci.comisionEstudio || 0) +
-      (montoPrestamo * porcentajeComisionActivacion) +
-      (montoPrestamo * porcentajeSeguroDesgravamen);
+      (montoPrestamo * (porcentajeComisionActivacion || 0)) +
+      (montoPrestamo * (porcentajeSeguroDesgravamenInicial || 0));
 
-    // 2) Monto efectivo a financiar
     const montoPrestamoConBono = Math.max(0, montoPrestamo - (bonoAplicable || 0));
 
-    // 3) Cuota fija (sistema francés)
     const cuotaFija = this.calcularCuotaFijaSistemaFrances(
       montoPrestamoConBono,
       tasaPeriodo,
@@ -110,9 +110,10 @@ export class CalculadoraFinancieraService {
       tipoGracia as any
     );
 
-    // 4) COSTOS PERIÓDICOS
     const cp = banco.costosPeriodicos || {};
-    const porcentajeSeguroRiesgoAnual = cp.porcentajeSeguroContraTodoRiesgo || 0; 
+    const rawPorcentajeSeguroRiesgoAnual = cp.porcentajeSeguroContraTodoRiesgo ?? 0;
+    const porcentajeSeguroRiesgoAnual = rawPorcentajeSeguroRiesgoAnual > 1 ? rawPorcentajeSeguroRiesgoAnual / 100 : rawPorcentajeSeguroRiesgoAnual;
+
     const comisionPeriodica = cp.comisionPeriodica || 0;
     const portes = cp.portes || 0;
     const gastosAdministracion = cp.gastosAdministracion || 0;
@@ -123,8 +124,12 @@ export class CalculadoraFinancieraService {
     let totalInteres = 0;
 
     const flujos: number[] = [];
-    // Flujo inicial: dinero que RECIBE el cliente (positivo)
-    flujos.push(montoPrestamoConBono - costosInicialesTotal);
+    const flujoInicial = montoPrestamoConBono - costosInicialesTotal;
+    flujos.push(flujoInicial);
+
+    console.log('montoPrestamoConBono =', montoPrestamoConBono);
+    console.log('costosInicialesTotal =', costosInicialesTotal);
+    console.log('flujoInicial =', flujoInicial);
 
     for (let i = 1; i <= numCuotas; i++) {
       const interes = saldo * tasaPeriodo;
@@ -152,11 +157,16 @@ export class CalculadoraFinancieraService {
         saldo = saldo - amortizacion;
       }
 
-      const seguroDesgravamen = saldo * porcentajeSeguroDesgravamen * mesesPeriodo;
-      const seguroRiesgo = (montoPrestamoConBono * porcentajeSeguroRiesgoAnual) * mesesPeriodo;
+      const pctDesgravAnual = porcentajeSeguroDesgravamenInicial || 0;
+      const pctDesgravPorPeriodo = pctDesgravAnual > 0 ? (Math.pow(1 + pctDesgravAnual, mesesPeriodo / 12) - 1) : 0;
+      const seguroDesgravamen = saldo * pctDesgravPorPeriodo;
+
+      const pctRiesgoAnual = porcentajeSeguroRiesgoAnual || 0;
+      const pctRiesgoPorPeriodo = pctRiesgoAnual > 0 ? (Math.pow(1 + pctRiesgoAnual, mesesPeriodo / 12) - 1) : 0;
+      const seguroRiesgo = (montoPrestamoConBono * pctRiesgoPorPeriodo);
+
       const otrosCostos = (portes || 0) + (gastosAdministracion || 0) + (mantenimientoCuenta || 0) + (comisionPeriodica || 0);
 
-      // Flujo de caja: Egreso es negativo
       const flujoPeriodo = -(
         (pagoPeriodo || 0) +
         (seguroDesgravamen || 0) +
@@ -188,6 +198,8 @@ export class CalculadoraFinancieraService {
       flujos.push(flujoPeriodo);
     }
 
+    console.log('primeros flujos =', flujos.slice(0, 6));
+
     return {
       cuotas,
       cuotaFija: Number(cuotaFija.toFixed(2)),
@@ -198,7 +210,7 @@ export class CalculadoraFinancieraService {
   }
 
   // ---------- VAN / TIR / TCEA / Duracion / Convexidad ----------
-  
+
   calcularVAN(flujos: number[], tasaDescuentoAnualDecimal: number, frecuenciaPago: number): number {
     const tdPeriod = Math.pow(1 + tasaDescuentoAnualDecimal, 1 / frecuenciaPago) - 1;
     let van = 0;
@@ -208,7 +220,6 @@ export class CalculadoraFinancieraService {
     return Number(van.toFixed(2));
   }
 
-  // IRR robusta por bisección -> retorna tasa por periodo en decimal
   calcularTIRDecimal(flujos: number[], low = -0.99, high = 5, tol = 1e-7, maxIter = 300): number | null {
     const npv = (r: number) => {
       let suma = 0;
@@ -225,9 +236,7 @@ export class CalculadoraFinancieraService {
       return null;
     }
     
-    // Si ambos tienen el mismo signo, no hay cambio de signo = no hay raíz
     if (fLow * fHigh > 0) {
-      // Intentar expandir el rango
       low = -0.99;
       high = 10;
       fLow = npv(low);
@@ -256,7 +265,6 @@ export class CalculadoraFinancieraService {
     return mid;
   }
 
-  // Retorna TIR anualizada en porcentaje (%)
   calcularTIR(flujos: number[], frecuenciaPago: number): number | null {
     const tirPeriodDecimal = this.calcularTIRDecimal(flujos);
     if (tirPeriodDecimal === null) return null;
@@ -264,7 +272,6 @@ export class CalculadoraFinancieraService {
     return Number((tirAnual * 100).toFixed(4));
   }
 
-  // Retorna TCEA anualizada en porcentaje (%)
   calcularTCEA(montoPrestamo: number, cuotas: Cuota[], costosIniciales: number, frecuenciaPago: number): number | null {
     const flujos: number[] = [montoPrestamo - costosIniciales];
     cuotas.forEach(c => {
@@ -279,7 +286,6 @@ export class CalculadoraFinancieraService {
     return Number((tceaAnual * 100).toFixed(4));
   }
 
-  // Retorna Duración en años
   calcularDuracion(cuotas: Cuota[], iPeriodo: number, frecuenciaPago: number): number {
     let sumaPonderada = 0;
     let sumaVP = 0;
@@ -293,7 +299,6 @@ export class CalculadoraFinancieraService {
     return Number((sumaPonderada / sumaVP / frecuenciaPago).toFixed(4));
   }
 
-  // Retorna Convexidad en años^2
   calcularConvexidad(cuotas: Cuota[], iPeriodo: number, frecuenciaPago: number): number {
     let suma = 0;
     let sumaVP = 0;
@@ -314,7 +319,6 @@ export class CalculadoraFinancieraService {
     config: ConfiguracionPlan,
     frecuenciaPago: number
   ): IndicadoresFinancieros {
-    // 1) Cálculo de tasas periódicas y flujos
     const tem = this.calcularTasaMensualDesdeConfig(config);
     const iPeriodo = this.calcularTasaPorPeriodoDesdeTEM(tem, frecuenciaPago);
 
@@ -322,7 +326,6 @@ export class CalculadoraFinancieraService {
     
     const tasaDescuentoDecimal = config.tasaDescuento || 0; 
 
-    // 2) Cálculo de indicadores
     const van = this.calcularVAN(flujos, tasaDescuentoDecimal, frecuenciaPago);
     const tirPct = this.calcularTIR(flujos, frecuenciaPago) || 0;
     const tcea = this.calcularTCEA(montoPrestamo, cuotas, costosIniciales, frecuenciaPago) || 0;
@@ -330,7 +333,7 @@ export class CalculadoraFinancieraService {
     const dur = this.calcularDuracion(cuotas, iPeriodo, frecuenciaPago);
     const conv = this.calcularConvexidad(cuotas, iPeriodo, frecuenciaPago);
     
-    // TEA y TEM se convierten a % para el objeto final
+
     const teaPct = (Math.pow(1 + tem, 12) - 1) * 100;
     const temPct = tem * 100;
 
