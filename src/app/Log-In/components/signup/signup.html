@@ -1,0 +1,219 @@
+<div class="container">
+  <div class="card">
+    
+    <!-- Header -->
+    <div class="header">
+      <div class="icon-wrapper">
+        <svg class="icon-large" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+      </div>
+      <h1>Crear Cuenta</h1>
+      <p class="subtitle">
+        Paso {{ currentStep }} de 2: {{ currentStep === 1 ? 'Información Personal' : 'Información Financiera' }}
+      </p>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="progress-container">
+      <div class="progress-bar" [style.width.%]="currentStep === 1 ? 50 : 100"></div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab" routerLink="/login">
+        Iniciar Sesión
+      </button>
+      <button class="tab tab-active" routerLink="/signup">
+        Registrarse
+      </button>
+    </div>
+
+    <!-- PASO 1: INFORMACIÓN PERSONAL -->
+    <div *ngIf="currentStep === 1" class="form-content">
+      <h2 class="step-title">Información Personal</h2>
+
+      <div class="form-grid">
+        <!-- Nombre Completo -->
+        <div class="form-group full-width">
+          <label class="form-label">
+            Nombre Completo <span class="required">*</span>
+          </label>
+          <input 
+            type="text" 
+            [(ngModel)]="userData.personalInfo.nombre"
+            class="form-input"
+            placeholder="Juan Pérez">
+        </div>
+
+        <!-- DNI -->
+        <div class="form-group">
+          <label class="form-label">
+            DNI <span class="required">*</span>
+          </label>
+          <input 
+            type="text" 
+            [(ngModel)]="userData.personalInfo.dni"
+            maxlength="8"
+            class="form-input"
+            placeholder="12345678">
+        </div>
+
+        <!-- Teléfono -->
+        <div class="form-group">
+          <label class="form-label">Teléfono</label>
+          <input 
+            type="tel" 
+            [(ngModel)]="userData.personalInfo.telefono"
+            class="form-input"
+            placeholder="987654321">
+        </div>
+
+        <!-- Fecha de Nacimiento -->
+        <div class="form-group">
+          <label class="form-label">Fecha de Nacimiento</label>
+          <input 
+            type="date" 
+            [(ngModel)]="userData.personalInfo.fechaNacimiento"
+            class="form-input">
+        </div>
+
+        <!-- Email -->
+        <div class="form-group">
+          <label class="form-label">
+            Email <span class="required">*</span>
+          </label>
+          <input 
+            type="email" 
+            [(ngModel)]="userData.email"
+            class="form-input"
+            placeholder="tu@email.com">
+        </div>
+
+        <!-- Contraseña -->
+        <div class="form-group">
+          <label class="form-label">
+            Contraseña <span class="required">*</span>
+          </label>
+          <input 
+            type="password" 
+            [(ngModel)]="userData.password"
+            class="form-input"
+            placeholder="••••••••">
+        </div>
+
+        <!-- Confirmar Contraseña -->
+        <div class="form-group">
+          <label class="form-label">
+            Confirmar Contraseña <span class="required">*</span>
+          </label>
+          <input 
+            type="password" 
+            [(ngModel)]="confirmPassword"
+            class="form-input"
+            placeholder="••••••••">
+        </div>
+      </div>
+
+      <!-- Messages -->
+      <div *ngIf="errorMessage" class="message message-error">
+        {{ errorMessage }}
+      </div>
+
+      <!-- Next Button -->
+      <button 
+        (click)="nextStep()"
+        class="btn btn-primary">
+        Continuar →
+      </button>
+    </div>
+
+    <!-- PASO 2: INFORMACIÓN FINANCIERA -->
+    <div *ngIf="currentStep === 2" class="form-content">
+      <h2 class="step-title">Información Financiera</h2>
+
+      <div class="form-grid">
+        <!-- Ocupación -->
+        <div class="form-group">
+          <label class="form-label">
+            Ocupación <span class="required">*</span>
+          </label>
+          <input 
+            type="text" 
+            [(ngModel)]="userData.financialInfo.ocupacion"
+            class="form-input"
+            placeholder="Ingeniero, Profesor, etc.">
+        </div>
+
+        <!-- Ingreso Mensual -->
+        <div class="form-group">
+          <label class="form-label">
+            Ingreso Mensual (S/) <span class="required">*</span>
+          </label>
+          <input 
+            type="number" 
+            [(ngModel)]="userData.financialInfo.ingresoMensual"
+            min="0"
+            class="form-input"
+            placeholder="5000">
+        </div>
+
+        <!-- Banco -->
+        <div class="form-group">
+          <label class="form-label">
+            Banco Principal <span class="required">*</span>
+          </label>
+          <select 
+            [(ngModel)]="userData.financialInfo.banco"
+            class="form-input">
+            <option value="">Selecciona un banco</option>
+            <option value="BCP">Banco de Crédito del Perú (BCP)</option>
+            <option value="BBVA">BBVA</option>
+            <option value="Interbank">Interbank</option>
+            <option value="Scotiabank">Scotiabank</option>
+            <option value="BanBif">BanBif</option>
+            <option value="Pichincha">Banco Pichincha</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
+
+        <!-- Tipo de Cuenta -->
+        <div class="form-group">
+          <label class="form-label">Tipo de Cuenta</label>
+          <select 
+            [(ngModel)]="userData.financialInfo.tipoCuenta"
+            class="form-input">
+            <option value="">Selecciona tipo</option>
+            <option value="Ahorros">Ahorros</option>
+            <option value="Corriente">Corriente</option>
+            <option value="CTS">CTS</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Messages -->
+      <div *ngIf="errorMessage" class="message message-error">
+        {{ errorMessage }}
+      </div>
+      <div *ngIf="successMessage" class="message message-success">
+        {{ successMessage }}
+      </div>
+
+      <!-- Buttons -->
+      <div class="button-group">
+        <button 
+          (click)="previousStep()"
+          class="btn btn-secondary">
+          ← Anterior
+        </button>
+        <button 
+          (click)="onSubmit()"
+          class="btn btn-primary">
+          Crear Cuenta
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>

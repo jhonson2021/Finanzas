@@ -1,0 +1,24 @@
+<div class="layout-container" *ngIf="currentUser">
+  
+  <!-- Sidebar Component -->
+  <app-sidebar-component 
+    [isOpen]="sidebarOpen" 
+    [currentUser]="currentUser"
+    (onLogout)="logout()">
+  </app-sidebar-component>
+
+  <!-- Main Content -->
+  <div class="main-content" [class.sidebar-closed]="!sidebarOpen">
+    
+    <!-- Topbar Component -->
+    <app-topbar-component
+      (onToggleSidebar)="toggleSidebar()">
+    </app-topbar-component>
+
+    <!-- Content Area (Router Outlet) -->
+    <div class="content-area">
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+
+</div>

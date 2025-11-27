@@ -1,0 +1,88 @@
+<div class="inicio-container" *ngIf="currentUser">
+  
+  <!-- Welcome Banner -->
+  <div class="welcome-banner">
+    <h2 class="welcome-title">¡Bienvenido, {{ currentUser.personalInfo.nombre }}!</h2>
+    <p class="welcome-subtitle">Es un gusto tenerte de vuelta en tu portal financiero</p>
+  </div>
+
+  <!-- Cards Grid -->
+  <div class="cards-grid">
+    
+    <!-- Información Personal -->
+    <div class="info-card">
+      <div class="card-header">
+        <svg class="card-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+        </svg>
+        <h3 class="card-title">Información Personal</h3>
+      </div>
+      <div class="info-list">
+        <div class="info-item">
+          <span class="info-label">Nombre:</span>
+          <span class="info-value">{{ currentUser.personalInfo.nombre }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Email:</span>
+          <span class="info-value">{{ currentUser.email }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">DNI:</span>
+          <span class="info-value">{{ currentUser.personalInfo.dni }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Teléfono:</span>
+          <span class="info-value">{{ currentUser.personalInfo.telefono || 'No registrado' }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Fecha de Nacimiento:</span>
+          <span class="info-value">{{ currentUser.personalInfo.fechaNacimiento || 'No registrado' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Información Financiera -->
+    <div class="info-card">
+      <div class="card-header">
+        <svg class="card-icon card-icon-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 8h6m-5 0a3 3 0 110 6H9l3 3m-3-6h6m6 1a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <h3 class="card-title">Información Financiera</h3>
+      </div>
+      <div class="info-list">
+        <div class="info-item">
+          <span class="info-label">Ocupación:</span>
+          <span class="info-value">{{ currentUser.financialInfo.ocupacion }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Ingreso Mensual:</span>
+          <span class="info-value info-value-highlight">S/ {{ currentUser.financialInfo.ingresoMensual | number:'1.2-2' }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Banco:</span>
+          <span class="info-value">{{ currentUser.financialInfo.banco }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Tipo de Cuenta:</span>
+          <span class="info-value">{{ currentUser.financialInfo.tipoCuenta || 'No especificado' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resumen Estadístico -->
+    <div class="summary-card">
+      <h3 class="card-title">Resumen de Cuenta</h3>
+      <div class="stats-grid">
+        <div class="stat-box stat-box-green">
+          <p class="stat-label">Ingreso Anual Estimado</p>
+          <p class="stat-value">S/ {{ (currentUser.financialInfo.ingresoMensual * 12) | number:'1.2-2' }}</p>
+        </div>
+        <div class="stat-box stat-box-purple">
+          <p class="stat-label">Estado de Cuenta</p>
+          <p class="stat-value">Activa ✓</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

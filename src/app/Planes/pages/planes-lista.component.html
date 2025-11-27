@@ -1,0 +1,241 @@
+<div class="planes-container">
+  
+  <!-- Header -->
+  <div class="planes-header">
+    <div class="header-content">
+      <h1 class="titulo-principal">
+        <svg class="icon-title" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+        </svg>
+        Mis Planes de Financiamiento
+      </h1>
+      <p class="subtitulo">Gestiona y compara todos tus planes guardados</p>
+    </div>
+    
+    <button class="btn-crear-plan" (click)="crearNuevoPlan()">
+      <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+      </svg>
+      Crear Nuevo Plan
+    </button>
+  </div>
+
+  <!-- Filtros y Búsqueda -->
+  <div class="filtros-section" *ngIf="!loading && planesOriginales.length > 0">
+    <div class="filtros-wrapper">
+      <!-- Búsqueda -->
+      <div class="search-box">
+        <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+        </svg>
+        <input 
+          type="text" 
+          [(ngModel)]="busqueda"
+          (ngModelChange)="onBusquedaChange()"
+          placeholder="Buscar por propiedad o banco..."
+          class="search-input">
+      </div>
+
+      <!-- Filtro Moneda -->
+      <div class="filtro-group">
+        <label class="filtro-label">Moneda</label>
+        <select [(ngModel)]="filtroMoneda" (ngModelChange)="onFiltroChange()" class="filtro-select">
+          <option value="TODOS">Todas</option>
+          <option value="PEN">Soles (S/)</option>
+          <option value="USD">Dólares ($)</option>
+        </select>
+      </div>
+
+      <!-- Filtro Orden -->
+      <div class="filtro-group">
+        <label class="filtro-label">Ordenar por</label>
+        <select [(ngModel)]="filtroOrden" (ngModelChange)="onFiltroChange()" class="filtro-select">
+          <option value="reciente">Más reciente</option>
+          <option value="antiguo">Más antiguo</option>
+          <option value="cuota-menor">Cuota menor</option>
+          <option value="cuota-mayor">Cuota mayor</option>
+          <option value="monto-menor">Monto menor</option>
+          <option value="monto-mayor">Monto mayor</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Botón Comparar (si hay seleccionados) -->
+    <div class="comparar-section" *ngIf="planesSeleccionados > 0">
+      <button class="btn-comparar" (click)="compararPlanes()">
+        <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+        </svg>
+        Comparar {{ planesSeleccionados }} planes
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Cargando tus planes...</p>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error && !loading" class="error-container">
+    <svg class="error-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+    </svg>
+    <h3>Error al cargar planes</h3>
+    <p>{{ error }}</p>
+    <button class="btn-reintentar" (click)="cargarPlanes()">Reintentar</button>
+  </div>
+
+  <!-- Sin Planes -->
+  <div *ngIf="!loading && !error && planesOriginales.length === 0" class="empty-state">
+    <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+    </svg>
+    <h3>No tienes planes guardados</h3>
+    <p>Crea tu primer plan de financiamiento para comenzar</p>
+    <button class="btn-empty-action" (click)="crearNuevoPlan()">
+      <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+      </svg>
+      Crear Primer Plan
+    </button>
+  </div>
+
+  <!-- Sin Resultados de Búsqueda -->
+  <div *ngIf="!loading && !error && planesOriginales.length > 0 && planes.length === 0" class="empty-state">
+    <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+    </svg>
+    <h3>No se encontraron resultados</h3>
+    <p>Intenta con otros términos de búsqueda o filtros</p>
+  </div>
+
+  <!-- Lista de Planes -->
+  <div class="planes-grid" *ngIf="!loading && !error && planes.length > 0">
+    <div 
+      *ngFor="let plan of planes" 
+      class="plan-card"
+      (click)="verDetalle(plan.id!)">
+      
+      <!-- Checkbox para comparar -->
+      <div class="plan-checkbox" (click)="toggleSeleccion(plan, $event)">
+        <input 
+          type="checkbox" 
+          (click)="$event.stopPropagation()">
+      </div>
+
+      <!-- Header del Card -->
+      <div class="plan-card-header">
+        <img 
+          *ngIf="plan.local?.imagen" 
+          [src]="plan.local?.imagen" 
+          [alt]="plan.local?.nombre"
+          class="plan-imagen">
+        <div class="plan-header-info">
+          <h3 class="plan-titulo">{{ plan.local?.nombre || 'Propiedad' }}</h3>
+          <p class="plan-direccion">{{ plan.local?.direccion || 'Sin dirección' }}</p>
+        </div>
+      </div>
+
+      <!-- Info del Banco -->
+      <div class="plan-banco">
+        <img 
+          *ngIf="plan.banco?.logo" 
+          [src]="plan.banco?.logo" 
+          [alt]="plan.banco?.nombre"
+          class="banco-logo">
+        <span class="banco-nombre">{{ plan.banco?.sigla || 'Banco' }}</span>
+      </div>
+
+      <!-- Detalles Principales -->
+      <div class="plan-detalles">
+        <div class="detalle-item destacado">
+          <span class="detalle-label">Cuota {{ plan.frecuenciaPago.includes('Mensual') ? 'Mensual' : 'Periódica' }}</span>
+          <span class="detalle-valor grande">
+            {{ plan.configuracion.moneda === 'PEN' ? 'S/' : '$' }}
+            {{ plan.cuotaFija | number:'1.2-2' }}
+          </span>
+        </div>
+
+        <div class="detalle-grid">
+          <div class="detalle-item">
+            <span class="detalle-label">Monto Préstamo</span>
+            <span class="detalle-valor">
+              {{ plan.configuracion.moneda === 'PEN' ? 'S/' : '$' }}
+              {{ plan.montoPrestamo | number:'1.0-0' }}
+            </span>
+          </div>
+
+          <div class="detalle-item">
+            <span class="detalle-label">Plazo</span>
+            <span class="detalle-valor">{{ plan.numAnios }} años</span>
+          </div>
+
+          <div class="detalle-item">
+            <span class="detalle-label">Total Cuotas</span>
+            <span class="detalle-valor">{{ plan.totalCuotas }}</span>
+          </div>
+
+          <div class="detalle-item">
+            <span class="detalle-label">TCEA</span>
+            <span class="detalle-valor">{{ plan.indicadores.tcea | number:'1.2-2' }}%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Indicadores -->
+      <div class="plan-indicadores">
+        <div class="indicador-mini">
+          <span class="indicador-mini-label">TEA</span>
+          <span class="indicador-mini-valor">{{ plan.indicadores.tea | number:'1.2-2' }}%</span>
+        </div>
+        <div class="indicador-mini">
+          <span class="indicador-mini-label">TIR</span>
+          <span class="indicador-mini-valor">{{ plan.indicadores.tir | number:'1.2-2' }}%</span>
+        </div>
+        <div class="indicador-mini" [class.negativo]="plan.indicadores.van < 0">
+          <span class="indicador-mini-label">VAN</span>
+          <span class="indicador-mini-valor">
+            {{ plan.configuracion.moneda === 'PEN' ? 'S/' : '$' }}
+            {{ plan.indicadores.van | number:'1.0-0' }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="plan-card-footer">
+        <span class="plan-fecha">
+          <svg class="icon-small" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+          </svg>
+          {{ formatearFecha(plan.createdAt) }}
+        </span>
+
+        <button class="btn-eliminar" (click)="eliminarPlan(plan, $event)">
+          <svg class="icon-small" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Resumen -->
+  <div class="resumen-section" *ngIf="!loading && planes.length > 0">
+    <div class="resumen-card">
+      <h3>Resumen General</h3>
+      <div class="resumen-stats">
+        <div class="stat-item">
+          <span class="stat-valor">{{ planes.length }}</span>
+          <span class="stat-label">Planes Mostrados</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-valor">{{ planesOriginales.length }}</span>
+          <span class="stat-label">Total General</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

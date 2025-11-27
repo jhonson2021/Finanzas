@@ -1,0 +1,456 @@
+<div class="simulador-container" *ngIf="!loading">
+  
+  <!-- Header -->
+  <div class="simulador-header">
+    <button (click)="volver()" class="btn-volver">
+      <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+      </svg>
+      Volver al Detalle
+    </button>
+    <h1 class="titulo-principal">Simulador de Crédito Hipotecario</h1>
+  </div>
+
+  <!-- Resumen de Propiedad y Banco -->
+  <div class="resumen-inicial" *ngIf="local && banco">
+    <div class="resumen-card">
+      <div class="resumen-header">
+        <h3>Propiedad Seleccionada</h3>
+      </div>
+      <div class="resumen-content">
+        <img [src]="local.imagen" [alt]="local.nombre" class="resumen-imagen">
+        <div class="resumen-info">
+          <h4>{{ local.nombre }}</h4>
+          <p class="precio">S/ {{ local.precio | number:'1.0-0' }}</p>
+          <p class="direccion">{{ local.direccion }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="resumen-card">
+      <div class="resumen-header">
+        <h3>Banco Seleccionado</h3>
+      </div>
+      <div class="resumen-content">
+        <img [src]="banco.logo" [alt]="banco.nombre" class="resumen-logo">
+        <div class="resumen-info">
+          <h4>{{ banco.sigla }}</h4>
+          <p class="descripcion">{{ banco.descripcion }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulario de Configuración -->
+  <form [formGroup]="simuladorForm" class="formulario-simulador">
+    
+    <!-- Sección 1: Parámetros Básicos -->
+    <div class="seccion-form">
+      <h2 class="seccion-titulo">Parámetros Básicos del Crédito</h2>
+      
+      <div class="form-grid">
+        <!-- Cuota Inicial -->
+        <div class="form-group span-2">
+          <label class="form-label">Cuota Inicial</label>
+          <div class="input-group-dual">
+            <div class="input-wrapper">
+              <span class="input-prefix">S/</span>
+              <input 
+                type="number" 
+                formControlName="cuotaInicial"
+                (ngModelChange)="onCuotaInicialChange()"
+                class="form-control"
+                [min]="local ? local.precio * 0.1 : 0"
+                [max]="local ? local.precio * 0.5 : 0">
+            </div>
+            <div class="input-wrapper">
+              <input 
+                type="number" 
+                formControlName="porcentajeCuotaInicial"
+                (ngModelChange)="onPorcentajeChange()"
+                class="form-control"
+                min="10"
+                max="50"
+                step="0.1">
+              <span class="input-suffix">%</span>
+            </div>
+          </div>
+          <small class="hint">Entre 10% y 50% del precio de la propiedad</small>
+        </div>
+
+        <!-- Plazo -->
+        <div class="form-group">
+          <label class="form-label">Plazo del Crédito (años)</label>
+          <div class="input-wrapper">
+            <input 
+              type="number" 
+              formControlName="plazoAnios"
+              class="form-control"
+              min="5"
+              [max]="banco?.plazoMaximo || 30">
+            <span class="input-suffix">años</span>
+          </div>
+          
+        </div>
+
+        <!-- Frecuencia de Pago -->
+        <div class="form-group">
+          <label class="form-label">Frecuencia de Pago</label>
+          <select formControlName="frecuenciaPago" class="form-control">
+            <option *ngFor="let freq of frecuenciasPago" [value]="freq.valor">
+              {{ freq.label }}
+            </option>
+          </select>
+          <small class="hint">Cuántas veces al año pagarás</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sección 2: Configuración de Tasa -->
+    <div class="seccion-form">
+      <h2 class="seccion-titulo">Configuración de Tasa de Interés</h2>
+      
+      <div class="form-grid">
+        <!-- Moneda -->
+        <div class="form-group">
+          <label class="form-label">Moneda</label>
+          <select formControlName="moneda" class="form-control">
+            <option *ngFor="let moneda of monedas" [value]="moneda">
+              {{ moneda === 'PEN' ? 'Soles (S/)' : moneda === 'USD' ? 'Dólares ($)' : moneda }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Tipo de Tasa -->
+        <div class="form-group">
+          <label class="form-label">Tipo de Tasa</label>
+          <select formControlName="tipoTasa" class="form-control">
+            <option value="EFECTIVA">Efectiva (TEA)</option>
+            <option value="NOMINAL">Nominal (TNA)</option>
+          </select>
+          <small class="hint">{{ simuladorForm.get('tipoTasa')?.value === 'EFECTIVA' ? 'Tasa efectiva anual' : 'Tasa nominal anual' }}</small>
+        </div>
+
+        <!-- Tasa de Interés -->
+        <div class="form-group">
+          <label class="form-label">Tasa de Interés</label>
+          <div class="input-wrapper">
+            <input 
+              type="number" 
+              formControlName="tasaInteresPct"
+              class="form-control"
+              min="0"
+              max="30"
+              step="0.1">
+            <span class="input-suffix">%</span>
+          </div>
+          <small class="hint">Tasa {{ simuladorForm.get('tipoTasa')?.value === 'EFECTIVA' ? 'efectiva' : 'nominal' }} anual</small>
+        </div>
+
+        <!-- Tasa de Descuento -->
+        <div class="form-group">
+          <label class="form-label">Tasa de Descuento (COK)</label>
+          <div class="input-wrapper">
+            <input 
+              type="number" 
+              formControlName="tasaDescuentoPct"
+              class="form-control"
+              min="0"
+              max="30"
+              step="0.1">
+            <span class="input-suffix">%</span>
+          </div>
+          <small class="hint">Costo de oportunidad de capital</small>
+        </div>
+
+        <!-- Capitalización (solo si es Nominal) -->
+        <div class="form-group" *ngIf="mostrarCapitalizacion()">
+          <label class="form-label">Capitalización</label>
+          <select formControlName="capitalizacion" class="form-control">
+            <option *ngFor="let cap of capitalizaciones" [value]="cap">
+              {{ cap }}
+            </option>
+          </select>
+          <small class="hint">Frecuencia de capitalización de intereses</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sección 3: Períodos de Gracia -->
+    <div class="seccion-form gracia-section">
+      <h2 class="seccion-titulo">Períodos de Gracia (Opcional)</h2>
+      <p class="seccion-descripcion">
+        Los períodos de gracia te permiten postergar el pago de amortización o de toda la cuota durante los primeros periodos del crédito.
+      </p>
+      
+      <div class="form-grid">
+        <!-- Tipo de Gracia -->
+        <div class="form-group">
+          <label class="form-label">Tipo de Gracia</label>
+          <select formControlName="tipoGracia" class="form-control">
+            <option value="NINGUNO">Sin Gracia</option>
+            <option value="PARCIAL">Gracia Parcial (solo interés)</option>
+            <option value="TOTAL">Gracia Total (sin pagos)</option>
+          </select>
+        </div>
+
+        <!-- Período de Gracia -->
+        <div class="form-group" *ngIf="simuladorForm.get('tipoGracia')?.value !== 'NINGUNO'">
+          <label class="form-label">Período de Gracia</label>
+          <div class="input-wrapper">
+            <input 
+              type="number" 
+              formControlName="periodoGracia"
+              class="form-control"
+              min="0"
+              max="24">
+            <span class="input-suffix">períodos</span>
+          </div>
+          <small class="hint">Máximo 6 períodos</small>
+        </div>
+      </div>
+
+      <!-- Info de Gracia -->
+      <div class="gracia-info" *ngIf="simuladorForm.get('tipoGracia')?.value !== 'NINGUNO'">
+        <div class="alert-info">
+          <svg class="alert-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+          </svg>
+          <div>
+            <p *ngIf="simuladorForm.get('tipoGracia')?.value === 'PARCIAL'">
+              <strong>Gracia Parcial:</strong> Durante {{ simuladorForm.get('periodoGracia')?.value }} períodos solo pagarás intereses. No se amortiza capital.
+            </p>
+            <p *ngIf="simuladorForm.get('tipoGracia')?.value === 'TOTAL'">
+              <strong>Gracia Total:</strong> Durante {{ simuladorForm.get('periodoGracia')?.value }} períodos no pagarás nada. Los intereses se capitalizarán (se suman al capital).
+            </p>
+            <p class="warning-text">⚠️ Los períodos de gracia aumentan el costo total del crédito.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resumen Previo -->
+    <div class="resumen-previo" *ngIf="local && banco">
+      <h3>Resumen de tu Simulación</h3>
+      <div class="resumen-grid">
+        <div class="resumen-item">
+          <span class="label">Precio de la propiedad:</span>
+          <span class="valor">S/ {{ local.precio | number:'1.0-0' }}</span>
+        </div>
+        <div class="resumen-item">
+          <span class="label">Cuota inicial:</span>
+          <span class="valor">S/ {{ simuladorForm.get('cuotaInicial')?.value | number:'1.0-0' }}</span>
+        </div>
+        <div class="resumen-item destacado">
+          <span class="label">Monto a financiar:</span>
+          <span class="valor">S/ {{ montoPrestamo | number:'1.0-0' }}</span>
+        </div>
+        <div class="resumen-item">
+          <span class="label">Costos iniciales:</span>
+          <span class="valor warning">S/ {{ costosInicialesTotal | number:'1.0-0' }}</span>
+        </div>
+        <div class="resumen-item">
+          <span class="label">Plazo:</span>
+          <span class="valor">{{ simuladorForm.get('plazoAnios')?.value }} años</span>
+        </div>
+        <div class="resumen-item">
+          <span class="label">Períodos de pago:</span>
+          <span class="valor">{{ (simuladorForm.get('plazoAnios')?.value || 0) * (simuladorForm.get('frecuenciaPago')?.value || 12) }} cuotas</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botón Generar Plan -->
+    <div class="form-actions">
+      <button 
+        type="button"
+        (click)="generarPlan()"
+        [disabled]="simuladorForm.invalid || generandoPlan"
+        class="btn-generar-plan">
+        <svg *ngIf="!generandoPlan" class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+        </svg>
+        <span *ngIf="!generandoPlan">Generar Plan de Pagos</span>
+        <div *ngIf="generandoPlan" class="spinner-small"></div>
+        <span *ngIf="generandoPlan">Generando...</span>
+      </button>
+    </div>
+  </form>
+
+  <!-- Resultados del Plan -->
+  <div class="resultados-section" *ngIf="planGenerado && indicadores">
+    
+    <!-- Indicadores Financieros -->
+    <div class="indicadores-section">
+      <h2 class="seccion-titulo">Indicadores Financieros</h2>
+      
+      <div class="indicadores-grid">
+        <div class="indicador-card">
+          <div class="indicador-icon tir">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+            </svg>
+          </div>
+          <div class="indicador-info">
+            <span class="indicador-label">TIR</span>
+            <span class="indicador-valor">{{ indicadores.tir | number:'1.2-2' }}%</span>
+          </div>
+          <small class="indicador-descripcion">Tasa Interna de Retorno Anual</small>
+        </div>
+
+        <div class="indicador-card">
+          <div class="indicador-icon van">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <div class="indicador-info">
+            <span class="indicador-label">VAN</span>
+            <span class="indicador-valor" [class.negativo]="indicadores.van < 0">S/ {{ indicadores.van | number:'1.0-0' }}</span>
+          </div>
+          <small class="indicador-descripcion">Valor Actual Neto</small>
+        </div>
+
+        <div class="indicador-card">
+          <div class="indicador-icon tcea">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+            </svg>
+          </div>
+          <div class="indicador-info">
+            <span class="indicador-label">TCEA</span>
+            <span class="indicador-valor">{{ indicadores.tcea | number:'1.2-2' }}%</span>
+          </div>
+          <small class="indicador-descripcion">Tasa de Costo Efectivo Anual</small>
+        </div>
+
+        <div class="indicador-card">
+          <div class="indicador-icon tea">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <div class="indicador-info">
+            <span class="indicador-label">TEA</span>
+            <span class="indicador-valor">{{ indicadores.tea | number:'1.2-2' }}%</span>
+          </div>
+          <small class="indicador-descripcion">Tasa Efectiva Anual</small>
+        </div>
+
+        <div class="indicador-card">
+          <div class="indicador-icon duracion">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <div class="indicador-info">
+            <span class="indicador-label">Duración</span>
+            <span class="indicador-valor">{{ indicadores.duracion | number:'1.2-2' }} años</span>
+          </div>
+          <small class="indicador-descripcion">Duración de Macaulay</small>
+        </div>
+
+        <div class="indicador-card">
+          <div class="indicador-icon convexidad">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path>
+            </svg>
+          </div>
+          <div class="indicador-info">
+            <span class="indicador-label">Convexidad</span>
+            <span class="indicador-valor">{{ indicadores.convexidad | number:'1.2-2' }}</span>
+          </div>
+          <small class="indicador-descripcion">Sensibilidad a tasas de interés</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cuota Fija -->
+    <div class="cuota-fija-section">
+      <h3>Cuota {{ simuladorForm.get('frecuenciaPago')?.value === 12 ? 'Mensual' : 'Periódica' }} Fija</h3>
+      <div class="cuota-fija-display">
+        <span class="cuota-label">Tu cuota será de:</span>
+        <span class="cuota-valor">S/ {{ planGenerado.cuotaFija | number:'1.2-2' }}</span>
+        <span class="cuota-nota">+ costos periódicos (seguros, comisiones, etc.)</span>
+      </div>
+    </div>
+
+    <!-- Tabla de Amortización -->
+    <div class="tabla-amortizacion-section">
+      <h2 class="seccion-titulo"> Cronograma de Pagos</h2>
+      
+      <div class="tabla-container">
+        <table class="tabla-amortizacion">
+          <thead>
+            <tr>
+              <th>N°</th>
+              <th>Saldo Inicial</th>
+              <th>Interés</th>
+              <th>Amortización</th>
+              <th>Cuota</th>
+              <th>Seguro Desg.</th>
+              <th>Seguro Riesgo</th>
+              <th>Gastos</th>
+              <th>Total a Pagar</th>
+              <th>Saldo Final</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let cuota of cuotas; let i = index" [class.fila-gracia]="cuota.amortizacion === 0">
+              <td>{{ cuota.numero }}</td>
+              <td>{{ cuota.saldoInicial | number:'1.2-2' }}</td>
+              <td>{{ cuota.interes | number:'1.2-2' }}</td>
+              <td>{{ cuota.amortizacion | number:'1.2-2' }}</td>
+              <td class="destacado">{{ cuota.cuota | number:'1.2-2' }}</td>
+              <td>{{ cuota.seguroDesgravamen | number:'1.2-2' }}</td>
+              <td>{{ cuota.seguroRiesgo | number:'1.2-2' }}</td>
+              <td>{{ (cuota.portes + cuota.gastosAdministracion + cuota.comision) | number:'1.2-2' }}</td>
+              <td class="total-pagar">{{ (-cuota.flujo) | number:'1.2-2' }}</td>
+              <td>{{ cuota.saldoFinal | number:'1.2-2' }}</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr class="fila-totales">
+              <td colspan="2"><strong>TOTALES</strong></td>
+              <td><strong>{{ calcularTotalInteres() | number:'1.2-2' }}</strong></td>
+              <td><strong>{{ montoPrestamo | number:'1.2-2' }}</strong></td>
+              <td><strong>{{ calcularTotalCuotas() | number:'1.2-2' }}</strong></td>
+              <td colspan="3"></td>
+              <td><strong>{{ calcularTotalPagado() | number:'1.2-2' }}</strong></td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- Botón Guardar -->
+    <div class="acciones-finales">
+      <button 
+        (click)="guardarPlan()" 
+        [disabled]="guardandoPlan"
+        class="btn-guardar">
+        <svg *ngIf="!guardandoPlan" class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+        </svg>
+        <div *ngIf="guardandoPlan" class="spinner-small"></div>
+        <span *ngIf="!guardandoPlan">Guardar Plan de Pagos</span>
+        <span *ngIf="guardandoPlan">Guardando...</span>
+      </button>
+      
+      <div class="mensaje-guardado" *ngIf="planGenerado?.id">
+        <svg class="icon-success" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+        </svg>
+        <span>Plan guardado exitosamente (ID: {{ planGenerado.id }})</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Loading -->
+<div *ngIf="loading" class="loading">
+  <div class="spinner"></div>
+  <p>Cargando simulador...</p>
+</div>

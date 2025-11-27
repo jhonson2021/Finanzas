@@ -1,0 +1,101 @@
+<div class="bancos-container">
+
+  <div class="page-header">
+    <h1 class="page-title">Bancos</h1>
+    <p class="page-subtitle">Comparativa de tasas y costos</p>
+  </div>
+
+  <div *ngIf="loading" class="loading">
+    <div class="spinner"></div>
+    <p>Cargando bancos...</p>
+  </div>
+
+  <div *ngIf="error" class="error-message">{{ error }}</div>
+
+  <div *ngIf="!loading && !error" class="bancos-grid">
+    <div *ngFor="let banco of bancos" class="banco-card">
+
+      <div class="banco-header">
+        <img [src]="banco.logo" [alt]="banco.nombre" class="banco-logo" />
+
+        <div class="banco-info">
+          <h3>{{ banco.nombre }}</h3>
+          <span class="sigla">{{ banco.sigla }}</span>
+          <p class="descripcion">{{ banco.descripcion }}</p>
+        </div>
+
+        <button class="btn-toggle" (click)="toggleExpand(banco.id)">
+          {{ expandedBancoId === banco.id ? 'Ocultar' : 'Ver costos' }}
+        </button>
+      </div>
+
+      <!-- ZONA EXPANDIBLE -->
+      <div *ngIf="expandedBancoId === banco.id" class="banco-detalle">
+
+        <h4>Costos Iniciales</h4>
+        <div class="cost-grid">
+
+          <div class="cost-item">
+            <strong>Notariales:</strong> S/ {{ banco.costosIniciales.costesNotariales }}
+          </div>
+
+          <div class="cost-item">
+            <strong>Seguro de riesgo:</strong> S/ {{ banco.costosIniciales.seguroRiesgo }}
+          </div>
+
+          <div class="cost-item">
+            <strong>Registrales:</strong> S/ {{ banco.costosIniciales.costesRegistrales }}
+          </div>
+
+          <div class="cost-item">
+            <strong>Tasación:</strong> S/ {{ banco.costosIniciales.tasacion }}
+          </div>
+
+          <div class="cost-item">
+            <strong>Comisión de estudio:</strong> S/ {{ banco.costosIniciales.comisionEstudio }}
+          </div>
+
+          <div class="cost-item">
+            <strong>Seguro Desgravamen:</strong> {{ banco.costosIniciales.porcentajeSeguroDesgravamen }}%
+          </div>
+
+          <div class="cost-item">
+            <strong>Comisión de activación:</strong> {{ banco.costosIniciales.porcentajeComisionActivacion }}%
+          </div>
+
+        </div>
+
+        <h4>Costos Periódicos</h4>
+        <div class="cost-grid">
+
+          <div class="cost-item">
+            
+          </div>
+
+          <div class="cost-item">
+           
+          </div>
+
+          <div class="cost-item">
+            <strong>Portes:</strong> S/ {{ banco.costosPeriodicos.portes }}
+          </div>
+
+          <div class="cost-item">
+            <strong>Gastos de administración:</strong> S/ {{ banco.costosPeriodicos.gastosAdministracion }}
+          </div>
+
+          <div class="cost-item">
+         
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="!loading && !error && bancos.length === 0" class="no-results">
+    <p>No se encontraron bancos.</p>
+  </div>
+
+</div>

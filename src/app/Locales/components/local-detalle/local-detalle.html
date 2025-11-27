@@ -1,0 +1,184 @@
+<div class="detalle-container" *ngIf="!loading && local">
+  
+  <!-- Breadcrumb y Botón Volver -->
+  <div class="breadcrumb">
+    <button (click)="volver()" class="btn-volver">
+      <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+      </svg>
+      Volver a Locales
+    </button>
+  </div>
+
+  <!-- Alerta de Sueldo Mínimo -->
+  <div *ngIf="!cumpleSueldoMinimo" class="alerta-sueldo">
+    <svg class="icon-alerta" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+    </svg>
+    <div class="alerta-contenido">
+      <h3>⚠️ No Cumples con el Ingreso Mínimo</h3>
+      <p>Tu ingreso mensual de <strong>S/ {{ currentUser?.financialInfo?.ingresoMensual | number:'1.0-0' }}</strong> es inferior al mínimo requerido de <strong>S/ {{ local.sueldoMinimo | number:'1.0-0' }}</strong> para esta propiedad.</p>
+      <p class="sugerencia">Te recomendamos explorar otras propiedades que se ajusten a tu perfil financiero.</p>
+    </div>
+  </div>
+
+  <!-- Header con Imagen Principal -->
+  <div class="local-header">
+    <div class="imagen-principal">
+      <img [src]="local.imagen" [alt]="local.nombre">
+      <span class="badge-tipo">{{ local.tipo }}</span>
+    </div>
+    
+    <div class="info-principal">
+      <h1 class="titulo">{{ local.nombre }}</h1>
+      <p class="direccion">
+        <svg class="icon-small" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+        </svg>
+        {{ local.direccion }}
+      </p>
+      <p class="precio-destacado">S/ {{ local.precio | number:'1.0-0' }}</p>
+      <p class="descripcion">{{ local.descripcion }}</p>
+
+      <!-- Info adicional -->
+      <div class="info-extra">
+        <div class="info-badge">
+          <span class="badge-label">Antigüedad:</span>
+          <span class="badge-value">{{ local.antiguedad }}</span>
+        </div>
+        <div class="info-badge">
+          <span class="badge-label">Entrega:</span>
+          <span class="badge-value">{{ local.entregaEstimada }}</span>
+        </div>
+        <div class="info-badge" [class.cumple]="cumpleSueldoMinimo" [class.no-cumple]="!cumpleSueldoMinimo">
+          <span class="badge-label">Ingreso mínimo:</span>
+          <span class="badge-value">S/ {{ local.sueldoMinimo | number:'1.0-0' }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Características del Local -->
+  <div class="seccion-caracteristicas">
+    <h2 class="seccion-titulo">Características de la Propiedad</h2>
+    
+    <div class="specs-grid">
+      <div class="spec-card">
+        <svg class="spec-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+        </svg>
+        <div class="spec-info">
+          <span class="spec-label">Habitaciones</span>
+          <span class="spec-value">{{ local.habitaciones }}</span>
+        </div>
+      </div>
+
+      <div class="spec-card">
+        <svg class="spec-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+        </svg>
+        <div class="spec-info">
+          <span class="spec-label">Baños</span>
+          <span class="spec-value">{{ local.banios }}</span>
+        </div>
+      </div>
+
+      <div class="spec-card">
+        <svg class="spec-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
+        </svg>
+        <div class="spec-info">
+          <span class="spec-label">Área Total</span>
+          <span class="spec-value">{{ local.area }} m²</span>
+        </div>
+      </div>
+
+      <div class="spec-card">
+        <svg class="spec-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+        </svg>
+        <div class="spec-info">
+          <span class="spec-label">Pisos</span>
+          <span class="spec-value">{{ local.pisos }}</span>
+        </div>
+      </div>
+
+      <div class="spec-card">
+        <svg class="spec-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"></path>
+        </svg>
+        <div class="spec-info">
+          <span class="spec-label">Estacionamientos</span>
+          <span class="spec-value">{{ local.estacionamientos }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="amenidades">
+      <h3>✨ Amenidades y Características</h3>
+      <div class="tags-list">
+        <span *ngFor="let caracteristica of local.caracteristicas" class="tag">
+          <svg class="tag-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+          </svg>
+          {{ caracteristica }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Selección de Banco -->
+  <div class="seccion-banco">
+    <h2 class="seccion-titulo">Selecciona tu Entidad Financiera</h2>
+    <p class="subtitulo">Elige el banco con el que deseas simular tu crédito hipotecario</p>
+    
+    <div class="bancos-grid">
+      <div 
+        *ngFor="let banco of bancos"
+        (click)="seleccionarBanco(banco)"
+        [class.banco-seleccionado]="bancoSeleccionado?.id === banco.id"
+        class="banco-card-grande">
+        
+        <img [src]="banco.logo" [alt]="banco.nombre" class="banco-logo-grande">
+        
+        <div class="banco-info-detalle">
+          <h3>{{ banco.nombre }}</h3>
+          <p class="banco-descripcion">{{ banco.descripcion }}</p>
+          
+        </div>
+        
+        <div class="check-indicator-grande" *ngIf="bancoSeleccionado?.id === banco.id">
+          <svg fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Botón para ir al Simulador -->
+  <div class="acciones-final">
+    <button 
+      (click)="irASimulador()"
+      [disabled]="!bancoSeleccionado || !cumpleSueldoMinimo"
+      class="btn-ir-simulador"
+      [class.btn-disabled]="!bancoSeleccionado || !cumpleSueldoMinimo">
+      <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+      </svg>
+      {{ !cumpleSueldoMinimo ? 'No Cumples Requisitos' : (!bancoSeleccionado ? 'Selecciona un Banco' : 'Ir al Simulador de Crédito →') }}
+    </button>
+    
+    <p class="hint-accion" *ngIf="bancoSeleccionado && cumpleSueldoMinimo">
+      ✨ Configura todos los parámetros de tu crédito y genera tu plan de pagos personalizado
+    </p>
+  </div>
+
+</div>
+
+<!-- Loading -->
+<div *ngIf="loading" class="loading">
+  <div class="spinner"></div>
+  <p>Cargando información del local...</p>
+</div>

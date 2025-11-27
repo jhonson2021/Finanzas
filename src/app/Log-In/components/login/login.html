@@ -1,0 +1,75 @@
+<div class="container">
+  <div class="card">
+    
+    <!-- Header -->
+    <div class="header">
+      <div class="icon-wrapper">
+        <svg class="icon-large" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+      </div>
+      <h1>Portal Financiero</h1>
+      <p class="subtitle">Gestiona tus finanzas con seguridad</p>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab tab-active" routerLink="/login">
+        Iniciar Sesión
+      </button>
+      <button class="tab" routerLink="/signup">
+        Registrarse
+      </button>
+    </div>
+
+    <!-- Form -->
+    <div class="form-content">
+      <!-- Email -->
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <div class="input-wrapper">
+          <svg class="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+          </svg>
+          <input 
+            type="email" 
+            [(ngModel)]="email"
+            class="form-input"
+            placeholder="tu@email.com">
+        </div>
+      </div>
+
+      <!-- Password -->
+      <div class="form-group">
+        <label class="form-label">Contraseña</label>
+        <div class="input-wrapper">
+          <svg class="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+          </svg>
+          <input 
+            type="password" 
+            [(ngModel)]="password"
+            (keyup.enter)="onLogin()"
+            class="form-input"
+            placeholder="••••••••">
+        </div>
+      </div>
+
+      <!-- Messages -->
+      <div *ngIf="errorMessage" class="message message-error">
+        {{ errorMessage }}
+      </div>
+      <div *ngIf="successMessage" class="message message-success">
+        {{ successMessage }}
+      </div>
+
+      <!-- Submit Button -->
+      <button 
+        (click)="onLogin()"
+        class="btn btn-primary">
+        Iniciar Sesión
+      </button>
+
+    </div>
+  </div>
+</div>
